@@ -162,6 +162,7 @@
             <div class="chart-header">
                 <div class="chart-title">价格走势</div>
                 <div class="tabs">
+                    <div class="tab">分时</div>
                     <div class="tab">1月</div>
                     <div class="tab">3月</div>
                     <div class="tab">6月</div>
@@ -212,6 +213,26 @@
             } catch (error) {
                 console.error('Fetch real-time price error:', error);
             }
+        }
+
+        async function fetchTimePriceData() {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/api/time-price', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const result = await response.json();
+                if (result.sysCode === 1014 && result.bizResult && result.bizResult.data) {
+                    return result.bizResult.data.priceList.map(item => ({
+                        time: item.time.substring(0, 2) + ':' + item.time.substring(2, 4),
+                        price: parseFloat(item.price)
+                    }));
+                }
+            } catch (error) {
+                console.error('Fetch time price error:', error);
+            }
+            return [];
         }
 
         async function fetchHistoryData(months) {
@@ -270,7 +291,12 @@
                 document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
                 event.target.classList.add('active');
             }
-            const data = await fetchHistoryData(months);
+            let data = [];
+            if (months === 0) {
+                data = await fetchTimePriceData();
+            } else {
+                data = await fetchHistoryData(months);
+            }
             if (data && data.length > 0) {
                 renderChart(data);
             }
@@ -281,10 +307,11 @@
             setInterval(fetchRealTimePrice, 5000);
             loadData(12);
             const tabs = document.querySelectorAll('.tab');
-            tabs[0].onclick = (e) => loadData(1, e);
-            tabs[1].onclick = (e) => loadData(3, e);
-            tabs[2].onclick = (e) => loadData(6, e);
-            tabs[3].onclick = (e) => loadData(12, e);
+            tabs[0].onclick = (e) => loadData(0, e);
+            tabs[1].onclick = (e) => loadData(1, e);
+            tabs[2].onclick = (e) => loadData(3, e);
+            tabs[3].onclick = (e) => loadData(6, e);
+            tabs[4].onclick = (e) => loadData(12, e);
         });
     </script>
 </body>

@@ -25,6 +25,10 @@ class ProxyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             self.proxy_request('POST', 'https://mobile.cmbchina.com/igoldaccount/golddetail/history-price', post_data)
+        elif self.path == '/api/time-price':
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            self.proxy_request('POST', 'https://mobile.cmbchina.com/igoldaccount/gold-price/time-price', post_data)
         else:
             self.send_error(404)
 
