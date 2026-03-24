@@ -159,23 +159,23 @@
             <div class="diff-grid">
                 <div class="diff-item">
                     <div class="label">日涨跌</div>
-                    <div class="value down">-0.10%</div>
+                    <div class="value" id="diff_0">--</div>
                 </div>
                 <div class="diff-item">
                     <div class="label">近1个月</div>
-                    <div class="value down">-15.54%</div>
+                    <div class="value" id="diff_1">--</div>
                 </div>
                 <div class="diff-item">
                     <div class="label">近3个月</div>
-                    <div class="value down">-3.33%</div>
+                    <div class="value" id="diff_3">--</div>
                 </div>
                 <div class="diff-item">
                     <div class="label">近6个月</div>
-                    <div class="value up">+13.86%</div>
+                    <div class="value" id="diff_6">--</div>
                 </div>
                 <div class="diff-item">
                     <div class="label">近1年</div>
-                    <div class="value up">+37.53%</div>
+                    <div class="value" id="diff_12">--</div>
                 </div>
             </div>
         </div>
@@ -217,6 +217,18 @@
                     document.getElementById('currentPrice').innerText = data.sellPrice || '--';
                     document.getElementById('buyPrice').innerText = data.buyPrice || '--';
                     document.getElementById('sellPrice').innerText = data.sellPrice || '--';
+                    
+                    if (data.diffMap) {
+                        const periods = ['0', '1', '3', '6', '12'];
+                        periods.forEach(p => {
+                            const el = document.getElementById('diff_' + p);
+                            if (el && data.diffMap[p]) {
+                                const val = data.diffMap[p];
+                                el.innerText = val;
+                                el.className = 'value ' + (val.startsWith('-') ? 'down' : 'up');
+                            }
+                        });
+                    }
                 }
             } catch (error) {
                 console.error('Fetch real-time price error:', error);
