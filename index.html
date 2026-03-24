@@ -145,10 +145,10 @@
     <!-- 头部：实时价格 -->
     <div class="header">
         <h1>招商银行 黄金(克)</h1>
-        <div class="current-price">983.41</div>
+        <div class="current-price" id="currentPrice">--</div>
         <div class="price-actions">
-            <div>买入价 (元/克) <span id="buyPrice">983.41</span></div>
-            <div>卖出价 (元/克) <span id="sellPrice">978.41</span></div>
+            <div>买入价 (元/克) <span id="buyPrice">--</span></div>
+            <div>卖出价 (元/克) <span id="sellPrice">--</span></div>
         </div>
     </div>
 
@@ -206,6 +206,23 @@
     <script>
         let chartInstance = null;
         
+        async function fetchRealTimePrice() {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/api/price-diff', {
+                    method: 'GET'
+                });
+                const result = await response.json();
+                if (result.sysCode === 1014 && result.bizResult && result.bizResult.data) {
+                    const data = result.bizResult.data;
+                    document.getElementById('currentPrice').innerText = data.sellPrice || '--';
+                    document.getElementById('buyPrice').innerText = data.buyPrice || '--';
+                    document.getElementById('sellPrice').innerText = data.sellPrice || '--';
+                }
+            } catch (error) {
+                console.error('Fetch real-time price error:', error);
+            }
+        }
+
         async function fetchHistoryData(months) {
             try {
                 const response = await fetch('http://127.0.0.1:8080/api/history-price', {
@@ -269,6 +286,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            fetchRealTimePrice();
+            setInterval(fetchRealTimePrice, 5000);
             loadData(12);
             const tabs = document.querySelectorAll('.tab');
             tabs[0].onclick = (e) => loadData(1, e);
