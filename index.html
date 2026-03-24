@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>招行黄金详情页</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #d4af37, #f3e5ab);
+            padding: 24px 20px;
+            color: #fff;
+            text-align: center;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+        .current-price {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .price-actions {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .price-actions div span {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+        .container {
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .diff-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            text-align: center;
+        }
+        .diff-item {
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        .diff-item .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        .diff-item .value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .value.up {
+            color: #e53935;
+        }
+        .value.down {
+            color: #43a047;
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+        }
+        .tab {
+            padding: 4px 12px;
+            font-size: 12px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            color: #666;
+            cursor: pointer;
+        }
+        .tab.active {
+            background: #d4af37;
+            color: #fff;
+        }
+        .footer-btn {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            background: #fff;
+            padding: 12px 20px;
+            box-sizing: border-box;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 8px;
+            cursor: pointer;
+        }
+        .btn-buy {
+            background: #e53935;
+            color: white;
+        }
+        .btn-sell {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 头部：实时价格 -->
+    <div class="header">
+        <h1>招商银行 黄金(克)</h1>
+        <div class="current-price">983.41</div>
+        <div class="price-actions">
+            <div>买入价 (元/克) <span id="buyPrice">983.41</span></div>
+            <div>卖出价 (元/克) <span id="sellPrice">978.41</span></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 涨跌幅卡片 -->
+        <div class="card">
+            <div class="chart-title" style="margin-bottom: 12px;">历史涨跌幅</div>
+            <div class="diff-grid">
+                <div class="diff-item">
+                    <div class="label">日涨跌</div>
+                    <div class="value down">-0.10%</div>
+                </div>
+                <div class="diff-item">
+                    <div class="label">近1个月</div>
+                    <div class="value down">-15.54%</div>
+                </div>
+                <div class="diff-item">
+                    <div class="label">近3个月</div>
+                    <div class="value down">-3.33%</div>
+                </div>
+                <div class="diff-item">
+                    <div class="label">近6个月</div>
+                    <div class="value up">+13.86%</div>
+                </div>
+                <div class="diff-item">
+                    <div class="label">近1年</div>
+                    <div class="value up">+37.53%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- K线图/折线图卡片 -->
+        <div class="card">
+            <div class="chart-header">
+                <div class="chart-title">价格走势</div>
+                <div class="tabs">
+                    <div class="tab">1月</div>
+                    <div class="tab">3月</div>
+                    <div class="tab">6月</div>
+                    <div class="tab active">1年</div>
+                </div>
+            </div>
+            <canvas id="priceChart" height="200"></canvas>
+        </div>
+        
+        <div style="height: 80px;"></div> <!-- 底部留白 -->
+    </div>
+
+    <!-- 底部操作按钮 -->
+    <div class="footer-btn">
+        <div class="btn btn-sell">卖出</div>
+        <div class="btn btn-buy">买入</div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+        
+        async function fetchHistoryData(months) {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/api/history-price', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ month: months })
+                });
+                const result = await response.json();
+                if (result.sysCode === 1014 && result.bizResult && result.bizResult.data) {
+                    return result.bizResult.data.priceList.map(item => ({
+                        time: item.time.substring(4, 6) + '-' + item.time.substring(6, 8),
+                        price: parseFloat(item.price)
+                    }));
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+            }
+            return [];
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.time),
+                    datasets: [{
+                        label: '黄金价格',
+                        data: data.map(d => d.price),
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#f0f0f0' }, ticks: { color: '#888' } },
+                        x: { grid: { display: false }, ticks: { color: '#888', maxTicksLimit: 6 } }
+                    }
+                }
+            });
+        }
+
+        async function loadData(months, event) {
+            if (event) {
+                document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+                event.target.classList.add('active');
+            }
+            const data = await fetchHistoryData(months);
+            if (data && data.length > 0) {
+                renderChart(data);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData(12);
+            const tabs = document.querySelectorAll('.tab');
+            tabs[0].onclick = (e) => loadData(1, e);
+            tabs[1].onclick = (e) => loadData(3, e);
+            tabs[2].onclick = (e) => loadData(6, e);
+            tabs[3].onclick = (e) => loadData(12, e);
+        });
+    </script>
+</body>
+</html>
