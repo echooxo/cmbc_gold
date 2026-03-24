@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>招行黄金详情页</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -224,10 +225,13 @@
                 });
                 const result = await response.json();
                 if (result.sysCode === 1014 && result.bizResult && result.bizResult.data) {
-                    return result.bizResult.data.priceList.map(item => ({
-                        time: item.time.substring(0, 2) + ':' + item.time.substring(2, 4),
-                        price: parseFloat(item.price)
-                    }));
+                    return {
+                        priceList: result.bizResult.data.priceList.map(item => ({
+                            time: item.time.substring(0, 2) + ':' + item.time.substring(2, 4),
+                            price: parseFloat(item.price)
+                        })),
+                        lastDayPrice: parseFloat(result.bizResult.data.lastDayPrice)
+                    };
                 }
             } catch (error) {
                 console.error('Fetch time price error:', error);
@@ -255,11 +259,35 @@
             return [];
         }
 
-        function renderChart(data) {
+        function renderChart(data, lastDayPrice = null) {
             const ctx = document.getElementById('priceChart').getContext('2d');
             if (chartInstance) {
                 chartInstance.destroy();
             }
+            
+            let annotationOptions = {};
+            if (lastDayPrice !== null) {
+                annotationOptions = {
+                    annotations: {
+                        line1: {
+                            type: 'line',
+                            yMin: lastDayPrice,
+                            yMax: lastDayPrice,
+                            borderColor: '#e53935',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            label: {
+                                content: '昨收 ' + lastDayPrice,
+                                display: true,
+                                position: 'start',
+                                backgroundColor: 'rgba(229, 57, 53, 0.7)',
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                };
+            }
+
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -277,7 +305,10 @@
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        annotation: annotationOptions
+                    },
                     scales: {
                         y: { grid: { color: '#f0f0f0' }, ticks: { color: '#888' } },
                         x: { grid: { display: false }, ticks: { color: '#888', maxTicksLimit: 6 } }
@@ -291,14 +322,18 @@
                 document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
                 event.target.classList.add('active');
             }
-            let data = [];
+            let data, lastDayPrice = null;
             if (months === 0) {
-                data = await fetchTimePriceData();
+                const result = await fetchTimePriceData();
+                if (result) {
+                    data = result.priceList;
+                    lastDayPrice = result.lastDayPrice;
+                }
             } else {
                 data = await fetchHistoryData(months);
             }
             if (data && data.length > 0) {
-                renderChart(data);
+                renderChart(data, lastDayPrice);
             }
         }
 
